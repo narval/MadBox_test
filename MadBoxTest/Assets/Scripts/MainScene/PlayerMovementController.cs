@@ -4,14 +4,24 @@ using UnityEngine;
 
 public class PlayerMovementController : MonoBehaviour
 {
+    // References
     [SerializeField] private Rigidbody rigidBody;
     [SerializeField] private LevelData levelData;
     [Range(0, 1)] [SerializeField] private float percentage;
 
-    public bool drawRails;
+    //Custom
+    [SerializeField] private float maxSpeed = 5;
+    [SerializeField] private float speed = 0;
+    [SerializeField] private float accelerationRate = 0.5f;
+    [SerializeField] private float decelerationRate = 0.1f;
 
-    [SerializeField] private bool wasHit;
+    //Debug
+    [SerializeField] private bool drawRails; // For debug
+
+    //Internal
+    private bool wasHit;
     [SerializeField] private string hazardTag = "Hazard";
+
 
     void Start()
     {
@@ -20,9 +30,12 @@ public class PlayerMovementController : MonoBehaviour
 
     void Update()
     {
+        speed -= decelerationRate;
+        speed = Mathf.Max(0, speed);
+
         if (!wasHit)
         {
-            SetPlayerPosition(percentage); // for debug only
+            SetPlayerPosition(percentage);
         }
     }
 
@@ -46,7 +59,7 @@ public class PlayerMovementController : MonoBehaviour
         }
     }
 
-    public void SetPlayerPosition(float percentage)
+    private void SetPlayerPosition(float percentage)
     {
         int currentNode = GetCurrentWaypoint(percentage);
         int nextNode = currentNode + 1;
@@ -81,7 +94,17 @@ public class PlayerMovementController : MonoBehaviour
         if (collision.collider.CompareTag(hazardTag))
         {
             wasHit = true;
+            rigidBody.useGravity = true;
             rigidBody.constraints = RigidbodyConstraints.None; //Free the player so it can act like a ragdoll
         }
+    }
+
+    public void Run()
+    {
+        speed -= accelerationRate;
+        speed = Mathf.Min(maxSpeed, speed);
+
+
+
     }
 }
