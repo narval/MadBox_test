@@ -13,13 +13,6 @@ MonoBehaviour:
   m_Name: Level1
   m_EditorClassIdentifier: 
   waypoints:
-  - percentage: 0
-    position: {x: -23.47, y: 0, z: 0}
-  - percentage: 0.086
-    position: {x: -16.46, y: 0, z: 0}
-  - percentage: 0.259
-    position: {x: -3.38, y: 0, z: 0}
-  - percentage: 0.528
-    position: {x: 9.57, y: 0, z: 0}
-  - percentage: 1
-    position: {x: 22.83, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 6.03, y: 0, z: 0}
+  - {x: 43.7, y: 0, z: 0}

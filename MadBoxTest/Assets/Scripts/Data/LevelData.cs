@@ -5,5 +5,5 @@ using UnityEngine;
 [CreateAssetMenu(fileName ="levelx", menuName ="Data/LevelData")]
 public class LevelData : ScriptableObject
 {
-    public List<Waypoint> waypoints;
+    public Vector3[] waypoints;
 }

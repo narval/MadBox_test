@@ -1,92 +1,80 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class PlayerMovementController : MonoBehaviour
 {
     // References
     [SerializeField] private Rigidbody rigidBody;
     [SerializeField] private LevelData levelData;
+    [SerializeField] private NavMeshAgent navMeshAgent;
     [Range(0, 1)] [SerializeField] private float percentage;
 
     //Custom
-    [SerializeField] private float maxSpeed = 5;
-    [SerializeField] private float speed = 0;
-    [SerializeField] private float accelerationRate = 0.5f;
-    [SerializeField] private float decelerationRate = 0.1f;
+    [SerializeField] private float closeDistance = 0.5f;
 
     //Debug
     [SerializeField] private bool drawRails; // For debug
 
     //Internal
-    private bool wasHit;
+    [SerializeField] private bool wasHit;
+    private bool win;
     [SerializeField] private string hazardTag = "Hazard";
+    [SerializeField] private int currentWaypoint = 0;
 
 
     void Start()
     {
-        SetPlayerPosition(0);
+        currentWaypoint = 0;
+        transform.position = levelData.waypoints[currentWaypoint];
+        navMeshAgent.SetDestination(levelData.waypoints[currentWaypoint + 1]);
+        navMeshAgent.isStopped = true;
     }
 
     void Update()
     {
-        speed -= decelerationRate;
-        speed = Mathf.Max(0, speed);
-
-        if (!wasHit)
+        if (wasHit || win)
         {
-            SetPlayerPosition(percentage);
+            //SetPlayerPosition(percentage);
         }
+        else
+        {
+            if (navMeshAgent.remainingDistance <= closeDistance)
+            {
+
+                if (currentWaypoint < levelData.waypoints.Length - 1)
+                {
+                    ++currentWaypoint;
+                    navMeshAgent.SetDestination(levelData.waypoints[currentWaypoint + 1]);
+                }
+                else
+                {
+                    win = true;
+                }
+            }
+        }
+        //calculate percentage
     }
 
     private void OnDrawGizmos()
     {
         if (drawRails)
         {
-            for (int i = 0; i < levelData.waypoints.Count; i++)
+            for (int i = 0; i < levelData.waypoints.Length; i++)
             {
                 Gizmos.color = Color.yellow;
-                Gizmos.DrawSphere(levelData.waypoints[i].position, 0.5f);
+                Gizmos.DrawSphere(levelData.waypoints[i], 0.5f);
             }
 
             #if UNITY_EDITOR
-            for (int i = 0; i < levelData.waypoints.Count - 1; i++)
+            for (int i = 0; i < levelData.waypoints.Length - 1; i++)
             {
                 UnityEditor.Handles.color = Color.magenta;
-                UnityEditor.Handles.DrawDottedLine(levelData.waypoints[i].position, levelData.waypoints[i + 1].position, 3f);
+                UnityEditor.Handles.DrawDottedLine(levelData.waypoints[i], levelData.waypoints[i + 1], 3f);
             }
             #endif
         }
-    }
-
-    private void SetPlayerPosition(float percentage)
-    {
-        int currentNode = GetCurrentWaypoint(percentage);
-        int nextNode = currentNode + 1;
-
-        transform.position = Vector3.Lerp(
-            levelData.waypoints[currentNode].position,
-            levelData.waypoints[nextNode].position,
-            Mathf.InverseLerp(levelData.waypoints[currentNode].percentage, levelData.waypoints[nextNode].percentage, percentage)
-            );
-    }
-
-    private int GetCurrentWaypoint(float percentage)
-    {
-        int actual = -1;
-        for (int i = 0; i < levelData.waypoints.Count - 1; i++)
-        {
-            if (percentage >= levelData.waypoints[i].percentage && percentage < levelData.waypoints[i + 1].percentage)
-            {
-                actual = i;
-                break;
-            }
-        }
-        if (actual == -1)
-        {
-            actual = levelData.waypoints.Count - 2;
-        }
-        return actual;
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -96,15 +84,15 @@ public class PlayerMovementController : MonoBehaviour
             wasHit = true;
             rigidBody.useGravity = true;
             rigidBody.constraints = RigidbodyConstraints.None; //Free the player so it can act like a ragdoll
+            navMeshAgent.isStopped = true;
+            navMeshAgent.enabled = false;
         }
     }
 
-    public void Run()
+    public void Run(bool shouldRun)
     {
-        speed -= accelerationRate;
-        speed = Mathf.Min(maxSpeed, speed);
-
-
+        if (wasHit || win) return;
+        navMeshAgent.isStopped = !shouldRun;
 
     }
 }
