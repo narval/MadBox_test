@@ -9,12 +9,16 @@ public class MainSceneManager : MonoBehaviour
 
     void Start()
     {
-
+        //Show the initial countdown and then enables player controller
     }
 
     void Update()
     {
-        playerMovementController.Run(Input.GetMouseButton(0) || Input.touchCount > 0);
-        Debug.Log(Input.GetMouseButton(0) || Input.touchCount > 0);
+
+    }
+
+    public void EndGame()
+    {
+
     }
 }

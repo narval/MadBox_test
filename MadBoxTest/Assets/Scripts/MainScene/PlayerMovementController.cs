@@ -9,7 +9,8 @@ public class PlayerMovementController : MonoBehaviour
     [SerializeField] private Rigidbody rigidBody;
     [SerializeField] private LevelData levelData;
     [SerializeField] private NavMeshAgent navMeshAgent;
-    [Range(0, 1)] [SerializeField] private float percentage;
+    [SerializeField] private MainSceneUIController mainSceneUIController;
+
 
     //Custom
     [SerializeField] private float closeDistance = 0.5f;
@@ -18,6 +19,7 @@ public class PlayerMovementController : MonoBehaviour
     [SerializeField] private bool drawRails; // For debug
 
     //Internal
+    [Range(0, 1)] [SerializeField] private float percentage;
     [SerializeField] private bool wasHit;
     private bool win;
     [SerializeField] private string hazardTag = "Hazard";
@@ -34,16 +36,12 @@ public class PlayerMovementController : MonoBehaviour
 
     void Update()
     {
-        if (wasHit || win)
-        {
-            //SetPlayerPosition(percentage);
-        }
-        else
+        Run(Input.GetMouseButton(0) || Input.touchCount > 0); // Handles player input
+        if (!wasHit & !win)
         {
             if (navMeshAgent.remainingDistance <= closeDistance)
             {
-
-                if (currentWaypoint < levelData.waypoints.Length - 1)
+                if (currentWaypoint < levelData.waypoints.Length - 2)
                 {
                     ++currentWaypoint;
                     navMeshAgent.SetDestination(levelData.waypoints[currentWaypoint + 1]);
@@ -51,10 +49,14 @@ public class PlayerMovementController : MonoBehaviour
                 else
                 {
                     win = true;
+                    mainSceneUIController.OnWin();
+                    //Start winning coroutine
                 }
             }
+            percentage = Mathf.InverseLerp(0, levelData.waypoints.Length, currentWaypoint); // should add the amount between waypoints
+            mainSceneUIController.SetSliderValue(percentage);
         }
-        //calculate percentage
+        
     }
 
     private void OnDrawGizmos()
@@ -79,6 +81,7 @@ public class PlayerMovementController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (wasHit || win) return;
         if (collision.collider.CompareTag(hazardTag))
         {
             wasHit = true;
@@ -86,6 +89,8 @@ public class PlayerMovementController : MonoBehaviour
             rigidBody.constraints = RigidbodyConstraints.None; //Free the player so it can act like a ragdoll
             navMeshAgent.isStopped = true;
             navMeshAgent.enabled = false;
+            mainSceneUIController.OnLose();
+            //End game
         }
     }
 
